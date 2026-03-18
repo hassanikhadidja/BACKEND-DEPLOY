@@ -8,11 +8,11 @@ const isAdmin = require('../middlewares/isAdmin');
 router.get('/',controlles.GetProducts)
 router.get("/:id",Auth,controlles.GetOneProduct)
 
-router.post("/",upload.single("file"),Auth,isAdmin,controlles.AddProduct)
+router.post("/add",upload.single("file"),Auth,isAdmin,controlles.AddProduct)
 
 router.patch("/:id",upload.single("file"),Auth,isAdmin,controlles.UpdateProduct)
 
 router.delete("/:id",Auth,isAdmin,controlles.DeleteProduct)
 
 
-module.exports = router;
+module.exports = router; 

@@ -5,6 +5,7 @@ const { Auth } = require('../middlewares/isAuth');
 const isAdmin = require('../middlewares/isAdmin');
 
 router.post("/register",usercontrolles.Adduser)
+
 router.post("/login",usercontrolles.Login)
 
 router.get("/getcurrentuser",Auth,usercontrolles.getUser)
