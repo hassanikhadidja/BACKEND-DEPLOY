@@ -1,19 +1,26 @@
 const Product=require("../models/product")
 
 
-exports.AddProduct=async(req,res)=>{
-    try {
+exports.AddProduct = async (req, res) => {
+  try {
+    const product = new Product(req.body);
 
-      // dev =>  const url = `${req.protocol}://${req.get("host")}/${req.file.path}`
-             // dev => product.img=url
-          const product= new Product(req.body)
-           product.img=req.file.path;
-            await product.save()
-           return res.status(201).send({msg:"product added"})
-    } catch (error) {
-        return res.status(503).send({msg:error.message})
+    // ─── Safety check ──────────────────────────────
+    if (req.file) {
+      product.img = req.file.path;          // local path
+      // or → product.img = req.file.filename;   // usually better
+      // or → upload to cloudinary (see below)
+    } else {
+      // Optional: product.img = "default-product.jpg" or leave empty
     }
-}
+
+    await product.save();
+    return res.status(201).json({ msg: "product added", product });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: error.message });
+  }
+};
 
 exports.GetProducts=async(req,res)=>{
     try {
@@ -33,24 +40,46 @@ exports.GetOneProduct=async(req,res)=>{
     }
 }
 
-exports.UpdateProduct=async(req,res)=>{
-    try {
-        
-        if (req.file)
-        { 
-            // dev=>const url = `${req.protocol}://${req.get("host")}/${req.file.path}`
-       const   product=await Product.findById(req.parms.id)
-           //  dev=> product.img=url
-           product.img=req.file.path;
-         await product.save()
+
+exports.UpdateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ msg: "Product not found" });
     }
-    const {body}=req
-    await Product.findByIdAndUpdate(req.params.id,body,{new:true})
-        
-       return res.status(202).send({msg:"Update success"})
-    } catch (error) {
-        return res.status(503).send({msg:error.message})
+
+    // Update only if a new file was uploaded
+    if (req.file) {
+      product.img = req.file.path;
+      // or cloudinary version
     }
+
+    // Apply the rest of the body fields
+    Object.assign(product, req.body);
+
+    await product.save();
+
+    return res.status(200).json({ 
+      msg: "Update success",
+      product 
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: error.message });
+  }
+};
+
+console.log("Has file? →", !!req.file);
+if (req.file) {
+  console.log("File info →", {
+    originalname: req.file.originalname,
+    filename: req.file.filename,
+    path: req.file.path,
+    size: req.file.size,
+    mimetype: req.file.mimetype
+  });
+} else {
+  console.log("No file received. Content-Type:", req.headers["content-type"]);
 }
 
 exports.DeleteProduct=async(req,res)=>{

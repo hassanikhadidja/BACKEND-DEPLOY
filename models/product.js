@@ -4,7 +4,7 @@ const productSchema= new mongoose.Schema({
 name:{type:String,require:[true, 'Le nom du produit est obligatoire']},
 sku:{type:String,require:[true, 'Le code SKU est obligatoire']}, // Example: ENT-SAND-001, ENT-BALL-002, etc.
 price:{type:Number,require:[true, 'Le prix est obligatoire'], min: [0, 'Le prix ne peut pas être négatif']},
-image:{type:String},
+img:{type:String},
 description:{type:String,require:[true, 'La description est obligatoire']},
 age_plus: {
       type: Number,
