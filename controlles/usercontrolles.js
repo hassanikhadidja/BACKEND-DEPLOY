@@ -3,33 +3,48 @@ const passwordvalidator = require("../middlewares/passwordvalidator")
 const User=require("../models/user")
 const bcrypt = require("bcrypt")
 
-exports.Adduser=async(req,res)=>{
-    try {
-        const {email}=req.body
-        if(req.body.role){
-            return res.status(400).json({ msg: "Not auth !!" })
-        }
-        const ValidEmail=isValidEmail(email)
-         if (!ValidEmail){
-            return res.status(400).json({ msg: "Should be format email" })
-        }
-       const Matcheduser=await User.findOne({email})
-  if( Matcheduser){
-    return res.status(400).json({msg:"Email exist please login"})
-  }
-  if(!passwordvalidator(req.body.password)){
-    return res.status(400).json({msg:"Invalid password"})
-  }
-  const user= new User(req.body)
-  const hashedPassword = await bcrypt.hash(req.body.password,10); 
-          user.password=hashedPassword
-           await user.save()
-           return res.status(201).json({msg:"Register success"})
-    } catch (error) {
-        return res.status(503).json({msg:error.message})
-    }
-}
+// usercontrolles.js → Adduser
 
+exports.Adduser = async (req, res) => {
+  try {
+    const { email, password, name /* ... other fields */ } = req.body;
+
+    // Force role to 'user' – ignore anything sent by client
+    const userData = {
+      ...req.body,
+      role: 'user'           // ← always!
+    };
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ msg: "Invalid email format" });
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ msg: "Email already exists" });
+    }
+
+    if (!passwordvalidator(password)) {
+      return res.status(400).json({ 
+        msg: "Password must be ≥6 chars, contain uppercase, lowercase, number & symbol" 
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      ...userData,
+      password: hashedPassword
+    });
+
+    await user.save();
+
+    return res.status(201).json({ msg: "Registration successful" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
 
 exports.Login=async(req,res)=>{
     try {
