@@ -9,6 +9,17 @@ const connectDB = require("./config/connectDB");
 const productRoutes = require("./routes/productRoutes");
 const userRoutes = require("./routes/userRoutes");
 
+const cors = require("cors");
+
+connectDB()
+
+
+const corsOptions = {
+    origin: '*', 
+    credentials: true, 
+  };
+app.use(cors(corsOptions));
+
 // ─── 1. Global middleware ──────────────────────────────────────
 // Parse JSON bodies (API requests)
 app.use(express.json());
