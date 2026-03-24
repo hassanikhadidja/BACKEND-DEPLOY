@@ -13,6 +13,8 @@ const cors = require("cors");
 
 connectDB()
 
+module.exports = app;   // ← Very important for Vercel
+
 
 const corsOptions = {
     origin: '*', 
