@@ -33,25 +33,29 @@ exports.GetOneProduct=async(req,res)=>{
     }
 }
 
-exports.UpdateProduct=async(req,res)=>{
-    try {
-        
-        if (req.file)
-        { 
-            // dev=>const url = `${req.protocol}://${req.get("host")}/${req.file.path}`
-       const   product=await Product.findById(req.parms.id)
-           //  dev=> product.img=url
-           product.img=req.file.path;
-         await product.save()
+exports.UpdateProduct = async (req, res) => {
+  try {
+    const updateData = { ...req.body };
+
+    if (req.file) {
+      updateData.img = req.file.path;
     }
-    const {body}=req
-    await Product.findByIdAndUpdate(req.params.id,body,{new:true})
-        
-       return res.status(202).send({msg:"Update success"})
-    } catch (error) {
-        return res.status(503).send({msg:error.message})
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).send({ msg: "Product not found" });
     }
-}
+
+    return res.status(200).send({ msg: "Update success", product });
+  } catch (error) {
+    return res.status(503).send({ msg: error.message });
+  }
+};
 
 exports.DeleteProduct=async(req,res)=>{
     try {
