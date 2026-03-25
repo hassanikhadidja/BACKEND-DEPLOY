@@ -31,19 +31,25 @@ exports.GetOneProduct = async (req, res) => {
 
 exports.UpdateProduct = async (req, res) => {
     try {
-        // Build the update object from the request body
-        const updateData = { ...req.body };
+        const id = req.params.id;
 
-        // BUG FIX 1: was req.parms.id (typo) — crashed when a file was uploaded
-        // BUG FIX 2: image was saved separately then overwritten by findByIdAndUpdate
-        // FIX: merge img directly into updateData so one single update handles everything
+        // If a new image file was uploaded, update it first separately
         if (req.file) {
-            updateData.img = req.file.path;
+            await Product.findByIdAndUpdate(id, { img: req.file.path });
         }
 
-        // BUG FIX 3: previous code did findByIdAndUpdate(id, body) AFTER saving img
-        // separately — the body didn't include img so the image change was lost
-        await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
+        // Update all other body fields (name, price, description etc.)
+        // Only spread body fields that are not empty strings
+        const updateFields = {};
+        Object.keys(req.body).forEach(key => {
+            if (req.body[key] !== '' && req.body[key] !== undefined) {
+                updateFields[key] = req.body[key];
+            }
+        });
+
+        if (Object.keys(updateFields).length > 0) {
+            await Product.findByIdAndUpdate(id, updateFields, { new: true });
+        }
 
         return res.status(202).send({ msg: "Update success" });
     } catch (error) {
