@@ -1,38 +1,24 @@
-const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+// utils/multer.js
+// ─────────────────────────────────────────────────────────────────
+// Vercel serverless functions have NO writable filesystem.
+// diskStorage (the multer default) tries to save files to disk → crash.
+// Solution: memoryStorage keeps the file in RAM as req.file.buffer,
+// then we stream it straight to Cloudinary — no disk needed.
+// ─────────────────────────────────────────────────────────────────
+const multer = require("multer");
 
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_NAME,
-  api_key: process.env.CLOUDINARY_APIKEY,
-  api_secret: process.env.CLOUDINARY_APISECRET,
-});
-
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'uploads/user', 
-    format: (req, file) => 'png', 
-    public_id: (req, file) => Date.now() + '-' + file.originalname,  
-  },
-});
-
+const storage = multer.memoryStorage();   // file lives in req.file.buffer
 
 const upload = multer({
-  storage: storage,
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
   fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype === 'image/png' ||
-      file.mimetype === 'image/jpg' ||
-      file.mimetype === 'image/jpeg'
-    ) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error('Only .png, .jpg, and .jpeg formats are allowed!'), false);
+      cb(new Error("Only image files are allowed"), false);
     }
   },
 });
-
 
 module.exports = upload;
